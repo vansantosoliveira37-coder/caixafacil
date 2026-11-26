@@ -415,9 +415,10 @@ function migrate(o){
   });
   return o;
 }
+var lastRaw='',saveWarnAt=0;
 function load(){
   var o=null;
-  try{var r=localStorage.getItem(KEY);if(r)o=JSON.parse(r);}catch(e){}
+  try{var r=localStorage.getItem(KEY);if(r){o=JSON.parse(r);lastRaw=r;}}catch(e){}
   var f=fresh();if(!o)return f;
   if(!o.logoV2)o.logo='';if(!o.myPhone||digits(String(o.myPhone)).length<10)o.myPhone='19993201352';
   for(var k in f){if(!(k in o))o[k]=f[k];}
@@ -427,7 +428,10 @@ function load(){
   return migrate(o);
 }
 var S=load();
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}ghSchedule();}
+function save(){try{var raw=JSON.stringify(S);localStorage.setItem(KEY,raw);lastRaw=raw;}catch(e){var n=Date.now();if(n-saveWarnAt>8000){saveWarnAt=n;try{toast('ATENÇÃO: o celular não conseguiu guardar os dados. Faça um backup agora (Menu > Configurações > Backup e dados).',9000);}catch(x){}}}ghSchedule();}
+function syncFromStore(){try{var r=localStorage.getItem(KEY);if(r&&r!==lastRaw){S=load();render();}}catch(e){}}
+try{window.addEventListener('storage',function(ev){if(ev.key===KEY)syncFromStore();});}catch(e){}
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
 
 var view='home',routeName='home',tab='receber',depth=0,openSec={};
 var cart=[];
@@ -2307,7 +2311,8 @@ try{window.claude.use('downloads').then(function(d){DL=d;},function(){});}catch(
 render();
 notifyToday();
 dailyPrompt();
-document.addEventListener('visibilitychange',function(){if(!document.hidden){notifyToday();dailyPrompt();}});
+document.addEventListener('visibilitychange',function(){if(!document.hidden){syncFromStore();notifyToday();dailyPrompt();}});
+window.addEventListener('focus',syncFromStore);
 })();
 </script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script></body></html>
