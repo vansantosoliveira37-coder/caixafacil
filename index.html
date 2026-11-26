@@ -88,7 +88,7 @@ h2{font-size:16px;margin:0;font-weight:700}
 .tile .bb{display:flex;justify-content:space-between;align-items:flex-end;position:relative;z-index:1}
 .tile b{font-size:clamp(20px,6.4vw,28px);font-weight:900;letter-spacing:-.02em;white-space:nowrap}
 .tile .go{color:#fff;opacity:.85;margin-bottom:2px}
-.t-teal{background:var(--t-teal)}.t-green{background:var(--t-green)}.t-orange{background:var(--t-orange)}.t-red{background:var(--t-red)}.t-roxo{background:#6a4fc7}.t-azulc{background:#1c5fa8}
+.t-teal{background:var(--t-teal)}.t-green{background:var(--t-green)}.t-orange{background:var(--t-orange)}.t-red{background:var(--t-red)}
 .quick{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .qa{background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:18px 6px 14px;display:flex;flex-direction:column;align-items:center;gap:10px;font-size:14px;color:var(--mut);text-align:center;border:1px solid var(--line)}
 .qa .ic{color:var(--fg)}
@@ -663,17 +663,13 @@ function vHome(){
   var mes=sum(ms,function(s){return s.total;});
   var margem=mes-sum(ms,function(s){return sum(s.items,function(i){return i.qty*i.cost;});});
   var desp=sum(S.entries.filter(function(e){return e.type==='pagar'&&e.due.slice(0,7)===k.m;}),function(e){return e.amount;});
-  var estP=S.products.filter(function(p){return p.kind!=='servico'&&p.stock>0;});
-  var estCusto=sum(estP,function(p){return p.stock*(p.cost||0);});
-  var estVenda=sum(estP,function(p){return p.stock*sellPrice(p);});
-  var estSemCusto=estP.filter(function(p){return !(p.cost>0);}).length;
   var b=balances(),h='';
   if(!S.products.length&&!S.sales.length){
     h+='<section class="intro"><h2>Comece por aqui</h2><p>Cadastre seus produtos para vender no PDV, ou carregue alguns exemplos para conhecer o app. Dá para apagar os exemplos depois.</p><div class="row" style="flex-wrap:wrap"><button class="btn primary" data-act="sheet-prod">Cadastrar produto</button><button class="btn" data-act="examples">Carregar exemplos</button></div></section>';
   }
   if(S.products.length||S.sales.length||S.entries.length){var bo=!S.lastBackup||daysTo(S.lastBackup)<-7;h+='<section class="card" style="display:flex;flex-direction:column;gap:8px;'+(bo?'border:2px solid var(--bad)':'')+'"><div class="row between" style="gap:10px"><div><b>'+(bo?'Hora de fazer o backup':'Backup em dia')+'</b><div class="small mut">'+(S.lastBackup?'Último backup: '+fdate(S.lastBackup)+'.':'Você ainda não fez backup.')+'</div></div><button class="btn '+(bo?'primary':'gout')+'" data-act="backupfile">Fazer backup agora</button></div>'+(bo?'<p class="small mut" style="margin:0">Seus dados ficam só neste celular. Guarde o arquivo no Google Drive ou mande para o seu WhatsApp.</p>':'')+'</section>';}
   h+='<div class="row between"><h1>Resumo do negócio</h1><button class="sqbtn" style="min-width:0;gap:8px;font-weight:700;color:var(--mut)" data-act="hide">'+ic(S.hide?'eyeoff':'eye',20)+(S.hide?'Mostrar':'Ocultar valores')+'</button></div>';
-  h+='<div class="tiles">'+tile('t-teal','Vendas no ano',money(ano),'Soma das vendas não canceladas deste ano.','vendas')+tile('t-green','Vendas no mês',money(mes),'Soma das vendas não canceladas deste mês.','vendas')+tile('t-orange','Margem bruta no mês',money(margem),'Vendas do mês menos o custo dos produtos vendidos.','relatorios')+tile('t-red','Despesas no mês',S.hide?'R$ •••••':'-'+brl.format(desp),'Contas a pagar com vencimento neste mês.','pagar')+tile('t-roxo','Estoque (custo)',money(estCusto),'Quantidade em estoque vezes o preço de custo de cada produto. Quanto você investiu no estoque que ainda tem.'+(estSemCusto?' '+estSemCusto+' produto(s) sem custo cadastrado entram com custo zero.':''),'produtos')+tile('t-azulc','Estoque (venda)',money(estVenda),'Quantidade em estoque vezes o preço de venda de cada produto. Quanto você recebe se vender tudo.','produtos')+'</div>';
+  h+='<div class="tiles">'+tile('t-teal','Vendas no ano',money(ano),'Soma das vendas não canceladas deste ano.','vendas')+tile('t-green','Vendas no mês',money(mes),'Soma das vendas não canceladas deste mês.','vendas')+tile('t-orange','Margem bruta no mês',money(margem),'Vendas do mês menos o custo dos produtos vendidos.','relatorios')+tile('t-red','Despesas no mês',S.hide?'R$ •••••':'-'+brl.format(desp),'Contas a pagar com vencimento neste mês.','pagar')+'</div>';
   h+='<div class="quick">'+qa('pdv','cart','Venda (PDV)')+qa('extrato','wallet','Extrato','Caixas e Contas')+qa('cobrar','phone','Cobranças')+qa('produtos','box','Produtos')+qa('contatos','users','Cliente')+qa('receber','down','A Receber')+qa('pagar','up','A Pagar')+qa('validade','calendar','Validade')+qa('relatorios','chart','Relatórios')+qa('devedores','dollar','Quem deve')+qa('aniversarios','calendar','Aniversários')+qa('reposicao','box','Reposição')+'</div>';
   notifs().forEach(function(n){h+='<button class="alert'+(n.bad?' bad':'')+'" data-act="go" data-v="'+n.v+'"><b>'+esc(n.t)+'</b>. '+esc(n.s)+'</button>';});
   if(dueToday().length){var sl=selfLink();h+=sl?'<a class="btn wa block" style="text-decoration:none" href="'+sl+'" target="_blank" rel="noopener">Enviar lista de hoje para o meu WhatsApp</a>':'<button class="btn block" data-act="selfwa">Enviar lista de hoje para o meu WhatsApp</button>';}
